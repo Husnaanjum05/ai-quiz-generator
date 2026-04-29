@@ -21,12 +21,12 @@ def generate_content(outcome, level):
     4. Scoring Key
     """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
+    response = client.responses.create(
+        model="gpt-4.1-mini",
+        input=prompt
     )
 
-    return response.choices[0].message.content
+    return response.output[0].content[0].text
 
 # Streamlit UI
 st.set_page_config(page_title="AI Quiz Generator")
