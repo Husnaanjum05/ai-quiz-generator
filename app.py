@@ -16,12 +16,11 @@ if st.button("Generate Training Materials"):
     if not st.secrets.get("GOOGLE_API_KEY"):
         st.error("Missing API Key in Streamlit Secrets!")
     else:
-        try:
-            # Initialize model with version fix
+       try:
+            # Using the 'models/' prefix forces the correct path resolution
             llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash", 
-                google_api_key=st.secrets["GOOGLE_API_KEY"],
-                version="v1"
+                model="models/gemini-1.5-flash", 
+                google_api_key=st.secrets["GOOGLE_API_KEY"]
             )
             
             template = """
