@@ -16,13 +16,13 @@ if st.button("Generate Training Materials"):
     if not st.secrets.get("GOOGLE_API_KEY"):
         st.error("Missing API Key in Streamlit Secrets!")
     else:
-       try:
-            # Using the 'models/' prefix forces the correct path resolution
+        try:
+            # Using the 'models/' prefix to solve the 404 error
             llm = ChatGoogleGenerativeAI(
                 model="models/gemini-1.5-flash", 
                 google_api_key=st.secrets["GOOGLE_API_KEY"]
             )
-           
+            
             template = """
             Generate a Training Lab and Quiz for: {outcome}
             Bloom's Level: {bloom} | Difficulty: {diff}
@@ -39,7 +39,7 @@ if st.button("Generate Training Materials"):
                 st.success("Generation Complete!")
                 st.markdown(result_text)
                 
-                # Export feature from your reference image
+                # Export feature
                 st.download_button("Download for LMS", result_text, file_name="lab_module.txt")
                 
         except Exception as e:
