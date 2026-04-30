@@ -17,12 +17,11 @@ if st.button("Generate Training Materials"):
         st.error("Missing API Key in Streamlit Secrets!")
     else:
         try:
-            # Using Gemini 1.5 Flash (Free & Fast)
-           # Updated model string for better compatibility
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash-latest", 
-    google_api_key=st.secrets["GOOGLE_API_KEY"]
-)
+            # FIXED: All code below 'try' is now indented
+            llm = ChatGoogleGenerativeAI(
+                model="gemini-1.5-flash", 
+                google_api_key=st.secrets["GOOGLE_API_KEY"]
+            )
             
             template = """
             Generate a Training Lab and Quiz for: {outcome}
@@ -40,8 +39,8 @@ llm = ChatGoogleGenerativeAI(
                 st.success("Generation Complete!")
                 st.markdown(result_text)
                 
-                # Export to LMS feature from your reference image
+                # Export feature from your reference image
                 st.download_button("Download for LMS", result_text, file_name="lab_module.txt")
                 
         except Exception as e:
-            st.error(f"Error: {e}")
+            st.error(f"Error calling the model: {e}")
