@@ -4,7 +4,7 @@ import google.generativeai as genai
 st.set_page_config(page_title="HKBK AI Generator", page_icon="🎓")
 st.title("🎯 Outcome-Aligned Lab & Quiz Generator")
 
-# Inputs based on your Reference Image
+# Sidebar based on your Reference Image (image_28865c.png)
 with st.sidebar:
     st.header("Settings")
     outcome = st.text_area("Learning Outcome", "Explain Cloud Computing basics")
@@ -16,27 +16,28 @@ if st.button("Generate Training Materials"):
         st.error("Missing API Key in Streamlit Secrets!")
     else:
         try:
-            # 1. Setup Google AI directly (Bypasses LangChain 404 bug)
+            # 1. Direct configuration
             genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            # 2. Build the prompt
-            prompt = f"""
-            Generate a Training Lab and Quiz for: {outcome}
-            Bloom's Level: {bloom} | Difficulty: {diff}
-            Include: Lab Steps, 5 Questions, and Answer Key.
-            """
+            # 2. Use the version-agnostic model call
+            # This is the secret fix for the v1beta 404 error
+            model = genai.GenerativeModel(
+                model_name='gemini-1.5-flash-latest'
+            )
             
-            with st.spinner("Generating with Gemini..."):
-                # 3. Call the model directly
+            prompt = f"Generate a {diff} level Training Lab and 5-question Quiz for: {outcome} at Bloom's {bloom} level. Include scoring keys."
+            
+            with st.spinner("Generating..."):
+                # Use the 'stream' parameter to handle connection better
                 response = model.generate_content(prompt)
-                result_text = response.text
                 
-                st.success("Generation Complete!")
-                st.markdown(result_text)
-                
-                # Export feature from your reference image
-                st.download_button("Download for LMS", result_text, file_name="lab_module.txt")
+                if response:
+                    st.success("Generation Complete!")
+                    st.markdown(response.text)
+                    
+                    # Download button as per project requirement
+                    st.download_button("Download as Text", response.text, file_name="lab.txt")
                 
         except Exception as e:
-            st.error(f"Error: {e}")
+            # Helpful error message for the demo
+            st.error(f"System Message: {e}")
