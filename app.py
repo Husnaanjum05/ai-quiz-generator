@@ -16,27 +16,42 @@ if st.button("Generate Training Materials"):
     if not api_key:
         st.error("Missing API Key in Streamlit Secrets!")
     else:
-        # SWITCHED TO GEMINI-PRO: This model is the most stable across all API versions
-        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={api_key}"
-        
-        headers = {'Content-Type': 'application/json'}
-        prompt = f"Generate a {diff} Training Lab & 5-question Quiz for: {outcome} at Bloom's {bloom} level. Include answers."
-        
-        payload = {"contents": [{"parts": [{"text": prompt}]}]}
-
         try:
-            with st.spinner("Connecting to Stable Model..."):
-                response = requests.post(url, headers=headers, data=json.dumps(payload))
-                response_data = response.json()
-
-                if response.status_code == 200:
-                    result_text = response_data['candidates'][0]['content']['parts'][0]['text']
-                    st.success("Generation Complete!")
-                    st.markdown(result_text)
-                    st.download_button("Download Lab", result_text, file_name="lab.txt")
+            with st.spinner("Finding an active model in your account..."):
+                # 1. Ask Google which models this specific API key can actually use
+                list_url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+                list_res = requests.get(list_url).json()
+                
+                # Find the first model that supports "generateContent"
+                available_models = [m['name'] for m in list_res.get('models', []) if 'generateContent' in m.get('supportedGenerationMethods', [])]
+                
+                if not available_models:
+                    st.error("No models found. Please check if the 'Generative Language API' is enabled for this key.")
                 else:
-                    # If gemini-pro also fails, it's a regional/project restriction
-                    st.error(f"Error {response.status_code}: {response_data.get('error', {}).get('message', 'Unknown Error')}")
+                    # Pick the best available model (prioritizing 1.5 flash or pro)
+                    target_model = available_models[0]
+                    for m in available_models:
+                        if "gemini-1.5-flash" in m:
+                            target_model = m
+                            break
+                    
+                    st.info(f"Using active model: {target_model}")
+
+                    # 2. Generate content using the discovered model path
+                    gen_url = f"https://generativelanguage.googleapis.com/v1beta/{target_model}:generateContent?key={api_key}"
+                    prompt = f"Generate a {diff} Training Lab & 5-question Quiz for: {outcome} at Bloom's {bloom} level. Include answers."
+                    payload = {"contents": [{"parts": [{"text": prompt}]}]}
+                    
+                    gen_res = requests.post(gen_url, json=payload)
+                    gen_data = gen_res.json()
+
+                    if gen_res.status_code == 200:
+                        result_text = gen_data['candidates'][0]['content']['parts'][0]['text']
+                        st.success("Generation Complete!")
+                        st.markdown(result_text)
+                        st.download_button("Download Lab", result_text, file_name="lab.txt")
+                    else:
+                        st.error(f"Generation Error: {gen_data.get('error', {}).get('message')}")
         
         except Exception as e:
-            st.error(f"Connection Error: {e}")
+            st.error(f"System Error: {e}")
