@@ -16,11 +16,12 @@ if st.button("Generate Training Materials"):
     if not st.secrets.get("GOOGLE_API_KEY"):
         st.error("Missing API Key in Streamlit Secrets!")
     else:
-        try:
-            # FIXED: All code below 'try' is now indented
+       try:
+            # Explicitly setting version to "v1" fixes the 404 NOT_FOUND
             llm = ChatGoogleGenerativeAI(
                 model="gemini-1.5-flash", 
-                google_api_key=st.secrets["GOOGLE_API_KEY"]
+                google_api_key=st.secrets["GOOGLE_API_KEY"],
+                version="v1"
             )
             
             template = """
