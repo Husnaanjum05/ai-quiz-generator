@@ -19,7 +19,6 @@ if st.button("Generate Training Materials"):
         try:
             # Using the 'models/' prefix to solve the 404 error
             llm = ChatGoogleGenerativeAI(
-                model="models/gemini-1.5-flash", 
                 model="gemini-pro",
                 google_api_key=st.secrets["GOOGLE_API_KEY"]
             )
