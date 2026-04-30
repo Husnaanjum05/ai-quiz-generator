@@ -43,14 +43,6 @@ chain = LLMChain(llm=llm, prompt=prompt, memory=st.session_state.memory)
 
 # 4. Execution
 if st.button("Generate Training Content"):
-    with st.spinner("Processing with LangChain..."):
-        response = chain.run({"outcome": outcome, "bloom_level": bloom_level, "difficulty": difficulty})
-        st.markdown("### Generated Training Lab & Quiz")
-        st.info(response)
-        
-        # Simple Export to LMS (Mockup)
-        st.download_button("Export to LMS (.txt)", response, file_name="training_module.txt")
-        if st.button("Generate Training Content"):
     try:
         # Switching to 3.5-turbo is safer for student/free accounts
         llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
