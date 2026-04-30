@@ -22,7 +22,7 @@ if st.button("Generate Training Materials"):
                 model="models/gemini-1.5-flash", 
                 google_api_key=st.secrets["GOOGLE_API_KEY"]
             )
-            
+           
             template = """
             Generate a Training Lab and Quiz for: {outcome}
             Bloom's Level: {bloom} | Difficulty: {diff}
