@@ -1,5 +1,5 @@
-langchain
-langchain-openai
+langchain==0.1.0
+langchain-openai==0.0.2
 streamlit
 faiss-cpu
 python-dotenv
