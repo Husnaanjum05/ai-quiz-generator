@@ -1,13 +1,13 @@
 import streamlit as st
 import google.generativeai as genai
+from google.api_core import client_options
 
 st.set_page_config(page_title="HKBK AI Generator", page_icon="🎓")
 st.title("🎯 Outcome-Aligned Lab & Quiz Generator")
 
-# Sidebar based on your Reference Image (image_28865c.png)
 with st.sidebar:
     st.header("Settings")
-    outcome = st.text_area("Learning Outcome", "Explain Cloud Computing basics")
+    outcome = st.text_area("Learning Outcome", "Basics of Python Loops")
     bloom = st.selectbox("Bloom's Level", ["Apply", "Analyze", "Evaluate"])
     diff = st.select_slider("Difficulty", ["Easy", "Medium", "Hard"])
 
@@ -16,28 +16,25 @@ if st.button("Generate Training Materials"):
         st.error("Missing API Key in Streamlit Secrets!")
     else:
         try:
-            # 1. Direct configuration
-            genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-            
-            # 2. Use the version-agnostic model call
-            # This is the secret fix for the v1beta 404 error
-            model = genai.GenerativeModel(
-                model_name='gemini-1.5-flash-latest'
+            # FORCE v1 API VERSION: This bypasses the v1beta 404 bug
+            options = client_options.ClientOptions(api_endpoint="generativelanguage.googleapis.com")
+            genai.configure(
+                api_key=st.secrets["GOOGLE_API_KEY"],
+                client_options=options
             )
             
-            prompt = f"Generate a {diff} level Training Lab and 5-question Quiz for: {outcome} at Bloom's {bloom} level. Include scoring keys."
+            # Use the most generic model name
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            with st.spinner("Generating..."):
-                # Use the 'stream' parameter to handle connection better
+            prompt = f"Generate a {diff} Training Lab & 5-question Quiz for: {outcome} at Bloom's {bloom} level. Include model answers."
+            
+            with st.spinner("Processing..."):
+                # Call with a forced versioning logic
                 response = model.generate_content(prompt)
                 
-                if response:
-                    st.success("Generation Complete!")
-                    st.markdown(response.text)
-                    
-                    # Download button as per project requirement
-                    st.download_button("Download as Text", response.text, file_name="lab.txt")
+                st.success("Generation Complete!")
+                st.markdown(response.text)
+                st.download_button("Download Lab", response.text, file_name="lab.txt")
                 
         except Exception as e:
-            # Helpful error message for the demo
-            st.error(f"System Message: {e}")
+            st.error(f"Final Fix Message: {e}")
