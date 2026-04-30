@@ -18,7 +18,11 @@ if st.button("Generate Training Materials"):
     else:
         try:
             # Using Gemini 1.5 Flash (Free & Fast)
-            llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=st.secrets["GOOGLE_API_KEY"])
+           # Updated model string for better compatibility
+llm = ChatGoogleGenerativeAI(
+    model="gemini-1.5-flash-latest", 
+    google_api_key=st.secrets["GOOGLE_API_KEY"]
+)
             
             template = """
             Generate a Training Lab and Quiz for: {outcome}
