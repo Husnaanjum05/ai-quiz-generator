@@ -1,6 +1,6 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 st.set_page_config(page_title="HKBK AI Generator", page_icon="🎓")
 st.title("🎯 Outcome-Aligned Lab & Quiz Generator")
