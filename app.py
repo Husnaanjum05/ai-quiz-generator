@@ -50,3 +50,24 @@ if st.button("Generate Training Content"):
         
         # Simple Export to LMS (Mockup)
         st.download_button("Export to LMS (.txt)", response, file_name="training_module.txt")
+        if st.button("Generate Training Content"):
+    try:
+        # Switching to 3.5-turbo is safer for student/free accounts
+        llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.7)
+        
+        chain = LLMChain(llm=llm, prompt=prompt, memory=st.session_state.memory)
+        
+        with st.spinner("Generating content..."):
+            response = chain.run({
+                "outcome": outcome, 
+                "bloom_level": bloom_level, 
+                "difficulty": difficulty
+            })
+            st.success("Done!")
+            st.markdown(response)
+            
+    except Exception as e:
+        if "rate_limit_shaded" in str(e).lower() or "insufficient_quota" in str(e).lower():
+            st.error("🚫 OpenAI Rate Limit Reached: Please check your API credits at platform.openai.com.")
+        else:
+            st.error(f"An error occurred: {e}")
