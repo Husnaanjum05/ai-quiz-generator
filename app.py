@@ -1,41 +1,52 @@
-# Load API key
 import streamlit as st
-from openai import OpenAI
+from langchain_openai import ChatOpenAI
+from langchain.prompts import PromptTemplate
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import LLMChain
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# 1. UI Setup
+st.set_page_config(page_title="Outcome-Aligned Generator", layout="wide")
+st.title("🎯 Outcome-Aligned Lab & Quiz Generator")
 
-# Function to generate content
-def generate_content(outcome, level):
-    prompt = f"""
-    Generate a training lab and quiz based on:
-    Learning Outcome: {outcome}
-    Difficulty Level: {level}
+# 2. Sidebar Configuration (Inputs)
+with st.sidebar:
+    st.header("Project Parameters")
+    outcome = st.text_area("Learning Outcome", "Explain REST API basics")
+    bloom_level = st.selectbox("Bloom's Level", ["Apply", "Analyze", "Evaluate"])
+    difficulty = st.select_slider("Difficulty", options=["Beginner", "Intermediate", "Advanced"])
+    
+    # Session Memory check
+    if 'memory' not in st.session_state:
+        st.session_state.memory = ConversationBufferMemory(memory_key="chat_history")
 
-    Include:
-    1. Lab Task
-    2. 3 Quiz Questions
-    3. Answers
-    4. Scoring Key
-    """
+# 3. LangChain Logic (Prompt Templates)
+llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
 
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=prompt
-    )
+template = """
+You are an expert L&D Trainer. 
+Outcome: {outcome}
+Bloom's Level: {bloom_level}
+Current Difficulty: {difficulty}
 
-    return response.output[0].content[0].text
+Generate:
+1. A practical Lab Exercise.
+2. A 5-question Quiz.
+3. Detailed Model Answers and a Scoring Key.
 
-# Streamlit UI
-st.set_page_config(page_title="AI Quiz Generator")
+{chat_history}
+"""
 
-st.title("🎯 AI Training Lab & Quiz Generator")
+prompt = PromptTemplate(input_variables=["outcome", "bloom_level", "difficulty", "chat_history"], template=template)
 
-outcome = st.text_input("Enter Learning Outcome")
-level = st.selectbox("Select Difficulty", ["Easy", "Medium", "Hard"])
+# Memory integration as per reference image
+chain = LLMChain(llm=llm, prompt=prompt, memory=st.session_state.memory)
 
-if st.button("Generate"):
-    if outcome:
-        result = generate_content(outcome, level)
-        st.write(result)
-    else:
-        st.warning("Please enter a learning outcome")
+# 4. Execution
+if st.button("Generate Training Content"):
+    with st.spinner("Processing with LangChain..."):
+        response = chain.run({"outcome": outcome, "bloom_level": bloom_level, "difficulty": difficulty})
+        st.markdown("### Generated Training Lab & Quiz")
+        st.info(response)
+        
+        # Simple Export to LMS (Mockup)
+        st.download_button("Export to LMS (.txt)", response, file_name="training_module.txt")
