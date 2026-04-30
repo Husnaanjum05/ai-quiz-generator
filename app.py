@@ -1,6 +1,5 @@
 import streamlit as st
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import PromptTemplate
+import google.generativeai as genai
 
 st.set_page_config(page_title="HKBK AI Generator", page_icon="🎓")
 st.title("🎯 Outcome-Aligned Lab & Quiz Generator")
@@ -17,30 +16,27 @@ if st.button("Generate Training Materials"):
         st.error("Missing API Key in Streamlit Secrets!")
     else:
         try:
-            # Using the 'models/' prefix to solve the 404 error
-            llm = ChatGoogleGenerativeAI(
-                model="gemini-pro",
-                google_api_key=st.secrets["GOOGLE_API_KEY"]
-            )
+            # 1. Setup Google AI directly (Bypasses LangChain 404 bug)
+            genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            template = """
+            # 2. Build the prompt
+            prompt = f"""
             Generate a Training Lab and Quiz for: {outcome}
             Bloom's Level: {bloom} | Difficulty: {diff}
             Include: Lab Steps, 5 Questions, and Answer Key.
             """
             
-            prompt = PromptTemplate.from_template(template)
-            chain = prompt | llm
-            
             with st.spinner("Generating with Gemini..."):
-                response = chain.invoke({"outcome": outcome, "bloom": bloom, "diff": diff})
-                result_text = response.content
+                # 3. Call the model directly
+                response = model.generate_content(prompt)
+                result_text = response.text
                 
                 st.success("Generation Complete!")
                 st.markdown(result_text)
                 
-                # Export feature
+                # Export feature from your reference image
                 st.download_button("Download for LMS", result_text, file_name="lab_module.txt")
                 
         except Exception as e:
-            st.error(f"Error calling the model: {e}")
+            st.error(f"Error: {e}")
